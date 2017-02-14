@@ -83,6 +83,6 @@ func (r *JSON) Next() (Message, error) {
 
 	var fields common.MapStr
 	message.Content, fields = r.decodeJSON(message.Content)
-	message.AddFields(common.MapStr{"json": fields})
+	message.AddFields(common.MapStr{r.cfg.Target: fields})
 	return message, nil
 }

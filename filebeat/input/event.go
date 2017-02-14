@@ -45,7 +45,7 @@ func (e *Event) ToMapStr() common.MapStr {
 
 	// Check if json fields exist
 	var jsonFields common.MapStr
-	if fields, ok := event["json"]; ok {
+	if fields, ok := event[e.JSONConfig.Target]; ok {
 		jsonFields = fields.(common.MapStr)
 	}
 
@@ -77,7 +77,7 @@ func mergeJSONFields(e *Event, event common.MapStr, jsonFields common.MapStr) {
 
 	if e.JSONConfig.KeysUnderRoot {
 		// Delete existing json key
-		delete(event, "json")
+		delete(event, e.JSONConfig.Target)
 
 		jsontransform.WriteJSONKeys(event, jsonFields, e.JSONConfig.OverwriteKeys, reader.JsonErrorKey)
 	}
