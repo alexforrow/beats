@@ -166,6 +166,19 @@ func TestEventToMapStrJSON(t *testing.T) {
 				"json_error": "type not overwritten (invalid value [_type])",
 			},
 		},
+		{
+			// if target provided, then expect keys to be read form the right key
+			Event: Event{
+				DocumentType: "test_type",
+				Text:         &text,
+				Data:         common.MapStr{"data": common.MapStr{"type": "test", "text": "hello"}},
+                JSONConfig:   &reader.JSONConfig{KeysUnderRoot: true, JsonKey: "data"},
+			},
+			ExpectedItems: common.MapStr{
+				"type": "test_type",
+				"text": "hello",
+			},
+		},
 	}
 
 	for _, test := range tests {

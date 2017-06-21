@@ -83,6 +83,10 @@ func (r *JSON) Next() (Message, error) {
 
 	var fields common.MapStr
 	message.Content, fields = r.decodeJSON(message.Content)
-	message.AddFields(common.MapStr{"json": fields})
+    if len(r.cfg.JsonKey) > 0 {
+        message.AddFields(common.MapStr{r.cfg.JsonKey: fields})
+    } else {
+        message.AddFields(common.MapStr{"json": fields})
+    }
 	return message, nil
 }

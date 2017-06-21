@@ -55,12 +55,18 @@ func (e *Event) ToMapStr() common.MapStr {
 
 	// Check if json fields exist
 	var jsonFields common.MapStr
-	if fields, ok := event["json"]; ok {
+    var jsonKey string
+    if e.JSONConfig != nil && len(e.JSONConfig.JsonKey) > 0 {
+        jsonKey = e.JSONConfig.JsonKey
+    } else {
+        jsonKey = "json"
+    }
+	if fields, ok := event[jsonKey]; ok {
 		jsonFields = fields.(common.MapStr)
 	}
 
 	if e.JSONConfig != nil && len(jsonFields) > 0 {
-		mergeJSONFields(e, event, jsonFields)
+		mergeJSONFields(e, event, jsonFields, jsonKey)
 	} else if e.Text != nil {
 		event["message"] = *e.Text
 	}
@@ -89,7 +95,7 @@ func (e *Event) HasData() bool {
 // respecting the KeysUnderRoot and OverwriteKeys configuration options.
 // If MessageKey is defined, the Text value from the event always
 // takes precedence.
-func mergeJSONFields(e *Event, event common.MapStr, jsonFields common.MapStr) {
+func mergeJSONFields(e *Event, event common.MapStr, jsonFields common.MapStr, jsonKey string) {
 
 	// The message key might have been modified by multiline
 	if len(e.JSONConfig.MessageKey) > 0 && e.Text != nil {
@@ -98,7 +104,7 @@ func mergeJSONFields(e *Event, event common.MapStr, jsonFields common.MapStr) {
 
 	if e.JSONConfig.KeysUnderRoot {
 		// Delete existing json key
-		delete(event, "json")
+	    delete(event, jsonKey)
 
 		jsontransform.WriteJSONKeys(event, jsonFields, e.JSONConfig.OverwriteKeys, reader.JsonErrorKey)
 	}
