@@ -219,6 +219,17 @@ func TestAddJSONFields(t *testing.T) {
 			ExpectedTimestamp: time.Time{},
 		},
 		{
+			// without keys_under_root, put everything in a custom key specified
+			Name:       "use custom namespace w/o keys_under_root",
+			Data:       common.MapStr{"type": "test_type", "foobar": common.MapStr{"type": "test", "text": "hello"}},
+			Text:       &text,
+			JSONConfig: JSONConfig{JsonKey: "foobar"},
+			ExpectedItems: common.MapStr{
+				"foobar": common.MapStr{"type": "test", "text": "hello"},
+			},
+			ExpectedTimestamp: time.Time{},
+		},
+		{
 			// when MessageKey is defined, the Text overwrites the value of that key
 			Name:       "write result to message_key field",
 			Data:       common.MapStr{"type": "test_type", "json": common.MapStr{"type": "test", "text": "hi"}},
@@ -226,6 +237,19 @@ func TestAddJSONFields(t *testing.T) {
 			JSONConfig: JSONConfig{MessageKey: "text"},
 			ExpectedItems: common.MapStr{
 				"json": common.MapStr{"type": "test", "text": "hello"},
+				"type": "test_type",
+			},
+			ExpectedTimestamp: time.Time{},
+		},
+		{
+			// when custom essageKey is defined, the Text overwrites the value of that custom key is defined as target
+			Name:       "write result to custom message_key field",
+			Data:       common.MapStr{"type": "test_type", "foobar": common.MapStr{"type": "test", "text": "hi"}, "json": common.MapStr{"type": "test", "text": "hi"}},
+			Text:       &text,
+			JSONConfig: JSONConfig{MessageKey: "text", JsonKey: "foobar"},
+			ExpectedItems: common.MapStr{
+				"foobar": common.MapStr{"type": "test", "text": "hello"},
+				"json": common.MapStr{"type": "test", "text": "hi"},
 				"type": "test_type",
 			},
 			ExpectedTimestamp: time.Time{},
@@ -304,16 +328,36 @@ func TestAddJSONFields(t *testing.T) {
 			},
 			ExpectedTimestamp: time.Time{},
 		},
+		{
+			// if target provided, then expect keys under root to be readen from that key
+			Name:       "overwrite keys from target if configured",
+			Data:       common.MapStr{"type": "test_type", "json": common.MapStr{"type": "json", "text": "hello json"}, "data": common.MapStr{"type": "data", "text": "hello data"}},
+			Text:       &text,
+			JSONConfig: JSONConfig{KeysUnderRoot: true, OverwriteKeys: true, JsonKey: "data"},
+			ExpectedItems: common.MapStr{
+				"type": "data",
+				"text": "hello data",
+			},
+			ExpectedTimestamp: time.Time{},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
 			var jsonFields common.MapStr
-			if fields, ok := test.Data["json"]; ok {
+			var jsonKey string
+
+			if len(test.JSONConfig.JsonKey) > 0 {
+				jsonKey = test.JSONConfig.JsonKey
+			} else {
+				jsonKey = "json"
+			}
+
+			if fields, ok := test.Data[jsonKey]; ok {
 				jsonFields = fields.(common.MapStr)
 			}
 
-			ts := MergeJSONFields(test.Data, jsonFields, test.Text, test.JSONConfig)
+			ts := MergeJSONFields(test.Data, jsonFields, test.Text, test.JSONConfig, &jsonKey)
 
 			t.Log("Executing test:", test)
 			for k, v := range test.ExpectedItems {

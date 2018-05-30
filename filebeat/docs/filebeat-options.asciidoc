@@ -397,12 +397,14 @@ Example configuration:
 json.keys_under_root: true
 json.add_error_key: true
 json.message_key: log
+json.target: data
 -------------------------------------------------------------------------------------
 
 You must specify at least one of the following settings to enable JSON parsing
 mode:
 
-*`keys_under_root`*:: By default, the decoded JSON is placed under a "json" key in the output document.
+*`keys_under_root`*:: By default, the decoded JSON is placed under a "json" key in the output document
+(or under the key defined by `target` if specified, see below).
 If you enable this setting, the keys are copied top level in the output document. The default is false.
 
 *`overwrite_keys`*:: If `keys_under_root` and this setting are enabled, then the values from the decoded
@@ -416,6 +418,9 @@ which to apply the line filtering and multiline settings. If specified the
 key must be at the top level in the JSON object and the value associated with
 the key must be a string, otherwise no filtering or multiline aggregation will
 occur.
+
+*`target`*:: An optional configuration setting that specifies the name of the JSON key under which 
+the decoded JSON is placed under (when `keys_under_root` is not specified). Default is "json"
 
 [float]
 ==== `multiline`

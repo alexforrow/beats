@@ -275,7 +275,15 @@ func (h *Harvester) Run() error {
 
 			// Check if json fields exist
 			var jsonFields common.MapStr
-			if f, ok := fields["json"]; ok {
+
+			var jsonKey string
+			if h.config.JSON != nil && len(h.config.JSON.JsonKey) > 0 {
+				jsonKey = h.config.JSON.JsonKey
+			} else {
+				jsonKey = "json"
+			}
+
+			if f, ok := fields[jsonKey]; ok {
 				jsonFields = f.(common.MapStr)
 			}
 
@@ -284,7 +292,7 @@ func (h *Harvester) Run() error {
 			}
 
 			if h.config.JSON != nil && len(jsonFields) > 0 {
-				ts := reader.MergeJSONFields(fields, jsonFields, &text, *h.config.JSON)
+				ts := reader.MergeJSONFields(fields, jsonFields, &text, *h.config.JSON, &jsonKey)
 				if !ts.IsZero() {
 					// there was a `@timestamp` key in the event, so overwrite
 					// the resulting timestamp
